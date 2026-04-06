@@ -382,8 +382,6 @@ const isHTTP = process.env.PORT || process.env.MCPIZE;
 if (isHTTP) {
   const port = parseInt(process.env.PORT ?? '8080', 10);
 
-  const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
-
   const httpServer = createServer(async (req, res) => {
     if (req.method === 'GET' && req.url === '/health') {
       res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -392,15 +390,24 @@ if (isHTTP) {
     }
 
     if ((req.method === 'POST' || req.method === 'GET' || req.method === 'DELETE') && req.url === '/mcp') {
-      await transport.handleRequest(req, res);
+      try {
+        const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
+        try { await server.close(); } catch { /* not connected yet */ }
+        await server.connect(transport);
+        await transport.handleRequest(req, res);
+      } catch (err) {
+        console.error('[ShopOps MCP] Request error:', err);
+        if (!res.headersSent) {
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Internal server error' }));
+        }
+      }
       return;
     }
 
     res.writeHead(404);
     res.end('Not Found');
   });
-
-  await server.connect(transport);
 
   httpServer.listen(port, () => {
     console.error(`[ShopOps MCP] HTTP server listening on port ${port}`);
