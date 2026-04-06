@@ -1,0 +1,37 @@
+{
+  "name": "shopops-mcp",
+  "version": "1.0.0",
+  "description": "AI e-commerce operations manager for MCP. Inventory forecasting, pricing optimization, customer segmentation, and order anomaly detection for Shopify and WooCommerce.",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "inspect": "npx @modelcontextprotocol/inspector npx tsx src/index.ts"
+  },
+  "keywords": [
+    "mcp", "ecommerce", "shopify", "woocommerce", "inventory",
+    "forecasting", "pricing", "rfm", "segmentation", "ai",
+    "fraud-detection", "analytics", "operations"
+  ],
+  "author": "Automatia BCN",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "uuid": "^13.0.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.2",
+    "@types/uuid": "^10.0.0",
+    "tsx": "^4.21.0",
+    "typescript": "^6.0.2",
+    "vitest": "^4.1.2"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

@@ -1,0 +1,35 @@
+version: 1
+name: shopops-mcp
+description: "AI e-commerce operations manager. Connect Shopify/WooCommerce, forecast inventory, optimize pricing with AI, segment customers (RFM), detect order anomalies, and generate operational reports."
+runtime: typescript
+entry: src/index.ts
+
+build:
+  install: npm ci
+  command: npm run build
+
+startCommand:
+  type: http
+  command: node dist/index.js
+  env:
+    MCPIZE: "true"
+    PORT: "8080"
+
+secrets:
+  - name: SHOPIFY_ACCESS_TOKEN
+    required: false
+    description: "Shopify Admin API access token for store connection"
+  - name: SHOPIFY_STORE_URL
+    required: false
+    description: "Shopify store URL (e.g. your-store.myshopify.com)"
+
+credentials:
+  - name: WOOCOMMERCE_URL
+    required: false
+    description: "WooCommerce store URL (e.g. https://your-store.com)"
+  - name: WOOCOMMERCE_KEY
+    required: false
+    description: "WooCommerce REST API consumer key"
+  - name: WOOCOMMERCE_SECRET
+    required: false
+    description: "WooCommerce REST API consumer secret"
