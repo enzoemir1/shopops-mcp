@@ -1,7 +1,12 @@
 {
-  "name": "shopops-mcp",
+  "name": "shopops-mcp-server",
   "version": "1.0.0",
+  "mcpName": "io.github.enzoemir1/shopops-mcp",
   "description": "AI e-commerce operations manager for MCP. Inventory forecasting, pricing optimization, customer segmentation, and order anomaly detection for Shopify and WooCommerce.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/enzoemir1/shopops-mcp.git"
+  },
   "type": "module",
   "main": "dist/index.js",
   "scripts": {
