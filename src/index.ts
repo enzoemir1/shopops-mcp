@@ -376,44 +376,62 @@ server.registerResource(
   }
 );
 
-// ── Transport ─────────────────────────────────────────────────────
-const isHTTP = process.env.PORT || process.env.MCPIZE;
-
-if (isHTTP) {
-  const port = parseInt(process.env.PORT ?? '8080', 10);
-
-  const httpServer = createServer(async (req, res) => {
-    if (req.method === 'GET' && req.url === '/health') {
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ status: 'ok', server: 'shopops-mcp', version: '1.0.0' }));
-      return;
-    }
-
-    if ((req.method === 'POST' || req.method === 'GET' || req.method === 'DELETE') && req.url === '/mcp') {
-      try {
-        const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
-        try { await server.close(); } catch { /* not connected yet */ }
-        await server.connect(transport);
-        await transport.handleRequest(req, res);
-      } catch (err) {
-        console.error('[ShopOps MCP] Request error:', err);
-        if (!res.headersSent) {
-          res.writeHead(500, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ error: 'Internal server error' }));
-        }
-      }
-      return;
-    }
-
-    res.writeHead(404);
-    res.end('Not Found');
-  });
-
-  httpServer.listen(port, () => {
-    console.error(`[ShopOps MCP] HTTP server listening on port ${port}`);
-  });
-} else {
-  const transport = new StdioServerTransport();
-  await server.connect(transport);
-  console.error('[ShopOps MCP] Running on stdio');
+// ── Smithery Sandbox ──────────────────────────────────────────────
+let _sandboxMode = false;
+export function createSandboxServer() {
+  _sandboxMode = true;
+  return server;
 }
+
+// ── Transport ─────────────────────────────────────────────────────
+async function main() {
+  const isHTTP = process.env.PORT || process.env.MCPIZE;
+
+  if (isHTTP) {
+    const port = parseInt(process.env.PORT ?? '8080', 10);
+
+    const httpServer = createServer(async (req, res) => {
+      if (req.method === 'GET' && req.url === '/health') {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ status: 'ok', server: 'shopops-mcp', version: '1.0.0' }));
+        return;
+      }
+
+      if ((req.method === 'POST' || req.method === 'GET' || req.method === 'DELETE') && req.url === '/mcp') {
+        try {
+          const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
+          try { await server.close(); } catch { /* not connected yet */ }
+          await server.connect(transport);
+          await transport.handleRequest(req, res);
+        } catch (err) {
+          console.error('[ShopOps MCP] Request error:', err);
+          if (!res.headersSent) {
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Internal server error' }));
+          }
+        }
+        return;
+      }
+
+      res.writeHead(404);
+      res.end('Not Found');
+    });
+
+    httpServer.listen(port, () => {
+      console.error(`[ShopOps MCP] HTTP server listening on port ${port}`);
+    });
+  } else {
+    const transport = new StdioServerTransport();
+    await server.connect(transport);
+    console.error('[ShopOps MCP] Running on stdio');
+  }
+}
+
+setTimeout(() => {
+  if (!_sandboxMode) {
+    main().catch((err) => {
+      console.error('Fatal error:', err);
+      process.exit(1);
+    });
+  }
+}, 0);

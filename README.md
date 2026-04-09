@@ -11,7 +11,7 @@
 - **4 MCP resources** exposing store overview, inventory, recent orders and top customers.
 - Inventory forecasting using moving-average demand plus safety-stock calculation.
 - RFM-based customer segmentation (7 distinct segments).
-- AI-driven pricing analysis and optimization.
+- Data-driven pricing analysis with margin-based optimization suggestions.
 - Order anomaly / fraud detection.
 - ABC analysis of product performance.
 - Automated daily and weekly reports.
@@ -49,7 +49,7 @@ The server will read the environment variables, connect to the configured store(
 | `inventory_status` | Returns current stock levels, back-order flags and low-stock alerts. |
 | `inventory_forecast` | Projects future inventory requirements using moving-average demand and safety-stock buffers. |
 | `pricing_analyze` | Generates a price elasticity report and identifies under-/over-priced SKUs. |
-| `pricing_optimize` | Suggests optimal price points based on AI-driven demand forecasts and competitor data. |
+| `pricing_optimize` | Suggests optimal price points based on margin analysis, sales velocity, and configurable pricing rules. |
 | `customers_segment` | Performs RFM analysis and assigns customers to one of seven segments. |
 | `customers_churn` | Scores customers for churn risk and provides retention recommendations. |
 | `order_anomalies` | Detects potentially fraudulent or erroneous orders using pattern-recognition models. |
@@ -84,7 +84,7 @@ Create a `.env` file at the project root. The following variables are required:
 | `WOOCOMMERCE_STORE_URL` | WooCommerce | Store URL (e.g., `https://example.com`). |
 | `MCP_PORT` | HTTP transport | Port for the Streamable HTTP endpoint (default `8080`). |
 | `MCP_LOG_LEVEL` | All | Logging verbosity (`error`, `warn`, `info`, `debug`). |
-| `MCP_PRICING_MODEL` | Pricing tools | Select pricing model (`basic`, `advanced`). |
+| `MCP_PRICING_MODEL` | Pricing tools | Pricing strategy (`margin_based`). |
 | `MCP_FORECAST_WINDOW_DAYS` | Inventory forecast | Number of days to forecast (default `30`). |
 
 Optional variables:
