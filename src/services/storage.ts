@@ -198,4 +198,5 @@ class Storage {
   }
 }
 
+/** Default global storage instance using process.cwd()/data directory. */
 export const storage = new Storage();
