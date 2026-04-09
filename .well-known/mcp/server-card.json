@@ -1,0 +1,27 @@
+{
+  "name": "shopops-mcp",
+  "displayName": "ShopOps MCP",
+  "description": "AI e-commerce operations for Shopify and WooCommerce. Inventory forecasting, margin-based pricing, RFM customer segmentation, order anomaly detection, and automated reports. 13 tools, 4 resources.",
+  "version": "1.1.0",
+  "tools": [
+    { "name": "store_connect", "description": "Connect Shopify or WooCommerce store" },
+    { "name": "inventory_status", "description": "Current stock levels and low-stock alerts" },
+    { "name": "inventory_forecast", "description": "Demand prediction and reorder points" },
+    { "name": "pricing_analyze", "description": "Margin calculation and sales velocity" },
+    { "name": "pricing_optimize", "description": "Price suggestions based on margin analysis" },
+    { "name": "customers_segment", "description": "RFM segmentation into 7 segments" },
+    { "name": "customers_churn", "description": "Churn risk scoring and retention recs" },
+    { "name": "order_anomalies", "description": "Fraud and anomaly detection (5 methods)" },
+    { "name": "product_performance", "description": "ABC/Pareto product analysis" },
+    { "name": "report_daily", "description": "Daily operations summary" },
+    { "name": "report_weekly", "description": "Weekly trend report" },
+    { "name": "store_connect:sync", "description": "Refresh data from store" },
+    { "name": "store_connect:list", "description": "List connected stores" }
+  ],
+  "resources": [
+    { "uri": "store://overview", "description": "Store metrics overview" },
+    { "uri": "store://inventory", "description": "Inventory catalogue" },
+    { "uri": "store://orders/recent", "description": "Recent 100 orders" },
+    { "uri": "store://customers/top", "description": "Top 50 customers by LTV" }
+  ]
+}
