@@ -82,6 +82,7 @@ server.registerTool(
     inputSchema: z.object({
       store_id: z.string().uuid().describe('Store ID'),
     }),
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   },
   async ({ store_id }) => {
     try {
@@ -101,6 +102,7 @@ server.registerTool(
       store_id: z.string().uuid().describe('Store ID'),
       product_id: z.string().optional().describe('Specific product ID (omit for all products)'),
     }),
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   },
   async ({ store_id, product_id }) => {
     try {
@@ -120,6 +122,7 @@ server.registerTool(
       store_id: z.string().uuid().describe('Store ID'),
       product_id: z.string().optional().describe('Specific product ID (omit for all)'),
     }),
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   },
   async ({ store_id, product_id }) => {
     try {
@@ -138,6 +141,7 @@ server.registerTool(
     inputSchema: z.object({
       store_id: z.string().uuid().describe('Store ID'),
     }),
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   },
   async ({ store_id }) => {
     try {
@@ -172,6 +176,7 @@ server.registerTool(
     inputSchema: z.object({
       store_id: z.string().uuid().describe('Store ID'),
     }),
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   },
   async ({ store_id }) => {
     try {
@@ -190,6 +195,7 @@ server.registerTool(
     inputSchema: z.object({
       store_id: z.string().uuid().describe('Store ID'),
     }),
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   },
   async ({ store_id }) => {
     try {
@@ -208,6 +214,7 @@ server.registerTool(
     inputSchema: z.object({
       store_id: z.string().uuid().describe('Store ID'),
     }),
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   },
   async ({ store_id }) => {
     try {
@@ -227,6 +234,7 @@ server.registerTool(
       store_id: z.string().uuid().describe('Store ID'),
       period_days: z.number().int().min(7).max(90).default(30).describe('Analysis period in days (default 30)'),
     }),
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   },
   async ({ store_id, period_days }) => {
     try {
@@ -246,6 +254,7 @@ server.registerTool(
       store_id: z.string().uuid().describe('Store ID'),
       date: z.string().optional().describe('Date (YYYY-MM-DD, defaults to today)'),
     }),
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   },
   async ({ store_id, date }) => {
     try {
@@ -264,6 +273,7 @@ server.registerTool(
     inputSchema: z.object({
       store_id: z.string().uuid().describe('Store ID'),
     }),
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   },
   async ({ store_id }) => {
     try {
@@ -382,6 +392,41 @@ export function createSandboxServer() {
   _sandboxMode = true;
   return server;
 }
+
+// ── Prompts ──────────────────────────────────────────────────────
+
+server.registerPrompt(
+  'inventory_alert',
+  { title: 'Inventory Health Check', description: 'Scan inventory for low stock, stockout risks, and reorder recommendations using demand forecasting.' },
+  async () => ({
+    messages: [{
+      role: 'assistant' as const,
+      content: { type: 'text' as const, text: 'I\'ll run a complete inventory health check.\n\n1. Use `inventory_status` to find current stock levels\n2. Run `inventory_forecast` to predict depletion dates\n3. Flag products at risk of stockout\n4. Generate reorder recommendations with quantities\n\nShall I start scanning your inventory?' },
+    }],
+  }),
+);
+
+server.registerPrompt(
+  'sales_summary',
+  { title: 'Sales Performance Summary', description: 'Generate a comprehensive sales report with product performance, customer segments, and trend analysis.' },
+  async () => ({
+    messages: [{
+      role: 'assistant' as const,
+      content: { type: 'text' as const, text: 'Let me prepare your sales performance summary.\n\n1. Run `report_daily` for today\'s metrics\n2. Use `product_performance` for ABC analysis\n3. Check `customers_segment` for RFM breakdown\n4. Review `order_anomalies` for unusual patterns\n\nReady to generate the full report?' },
+    }],
+  }),
+);
+
+server.registerPrompt(
+  'customer_retention',
+  { title: 'Customer Retention Analysis', description: 'Identify at-risk customers, analyze churn signals, and generate retention strategies using RFM segmentation.' },
+  async () => ({
+    messages: [{
+      role: 'assistant' as const,
+      content: { type: 'text' as const, text: 'I\'ll analyze your customer retention health.\n\n1. Use `customers_segment` to identify RFM segments\n2. Run `customers_churn` to score churn risk\n3. Find at-risk and hibernating customers\n4. Generate targeted retention recommendations\n\nWhich store should I analyze?' },
+    }],
+  }),
+);
 
 // ── Transport ─────────────────────────────────────────────────────
 async function main() {
