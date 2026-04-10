@@ -13,10 +13,11 @@ import { getCustomerSegments, getChurnRisk } from './tools/customers.js';
 import { getOrderAnomalies } from './tools/orders.js';
 import { getProductPerformance } from './tools/products.js';
 import { generateDailyReport, generateWeeklyReport } from './tools/reports.js';
+import { seedDemoStore } from './services/demo-seed.js';
 import { handleToolError, validateUUID } from './utils/errors.js';
 
 // ── Server ────────────────────────────────────────────────────────
-const SERVER_VERSION = '1.2.1';
+const SERVER_VERSION = '1.2.2';
 
 const server = new McpServer({
   name: 'shopops-mcp',
@@ -89,6 +90,25 @@ server.registerTool(
           synced: result.synced,
           next_steps: 'Use inventory_status, customers_segment, or report_daily with this store_id to start analyzing.',
         }, null, 2) }],
+      };
+    } catch (e) { return handleToolError(e); }
+  }
+);
+
+// ── Tool: store_demo_seed ─────────────────────────────────────────
+server.registerTool(
+  'store_demo_seed',
+  {
+    title: 'Seed Demo Store',
+    description: 'Create a realistic demo store populated with 20 products, 40 customers across 6 archetype buckets (champions, loyal, new, at-risk, hibernating, one-off), and 150+ orders spanning the last 6 months. Use this to explore ShopOps without real Shopify or WooCommerce credentials — every tool (inventory_status, customers_segment, order_anomalies, report_weekly, etc.) will return meaningful output on the returned store_id. Safe to call multiple times; each call creates a new demo store with a unique ID. Returns the store_id plus product/customer/order counts.',
+    inputSchema: z.object({}),
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
+  },
+  async () => {
+    try {
+      const result = await seedDemoStore();
+      return {
+        content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }],
       };
     } catch (e) { return handleToolError(e); }
   }

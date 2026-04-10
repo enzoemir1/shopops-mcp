@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { segmentCustomers, identifyChurnRisk } from '../../src/services/rfm.js';
+import { segmentCustomers, identifyChurnRisk, determineSegment } from '../../src/services/rfm.js';
 import type { Customer, Order } from '../../src/models/store.js';
 
 const storeId = 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee';
@@ -82,5 +82,18 @@ describe('RFM Segmentation', () => {
     const atRisk = identifyChurnRisk(customers, orders);
     // At least the old customers should be at risk
     expect(atRisk.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('determineSegment routes frequent-but-old customers to at_risk, not loyal (regression)', () => {
+    // Before the fix, any customer with F>=4 and M>=3 was labelled "loyal"
+    // regardless of recency. That meant a customer who ordered a lot six
+    // months ago still looked "loyal" and never triggered a win-back.
+    // The fix adds an r >= 3 guard to the loyal clause.
+    expect(determineSegment(1, 5, 4)).toBe('at_risk');   // old frequent → at_risk
+    expect(determineSegment(2, 4, 3)).toBe('at_risk');   // old frequent → at_risk
+    expect(determineSegment(3, 5, 4)).toBe('loyal');     // mostly-fresh frequent → loyal
+    expect(determineSegment(5, 5, 5)).toBe('champions'); // peak in all dims
+    expect(determineSegment(5, 1, 1)).toBe('new');       // fresh first-timer
+    expect(determineSegment(1, 1, 1)).toBe('lost');      // stale in all dims
   });
 });

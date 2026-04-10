@@ -40,12 +40,12 @@ function safeName(name: string): string {
 }
 
 // ── Storage ───────────────────────────────────────────────────────
-class Storage {
+export class Storage {
   private dataDir: string;
   private lock = new AsyncLock();
 
-  constructor() {
-    this.dataDir = join(process.cwd(), 'data');
+  constructor(dataDir?: string) {
+    this.dataDir = dataDir ?? join(process.cwd(), 'data');
   }
 
   private filePath(name: string): string {

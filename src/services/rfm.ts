@@ -32,12 +32,21 @@ function quintileScores(values: number[], ascending: boolean): number[] {
 
 /**
  * Determine RFM segment based on R, F, M scores.
+ *
+ * Rule order matters: more specific segments must be checked first.
+ * The loyal check intentionally requires r >= 3 so that high-frequency
+ * customers who have stopped buying are routed to at_risk instead of
+ * being mislabelled as loyal.
+ *
+ * Exported so tests can pin the decision boundary behaviour directly
+ * without needing to set up enough customers to trigger specific
+ * quintile scores.
  */
-function determineSegment(r: number, f: number, m: number): RFMSegment {
+export function determineSegment(r: number, f: number, m: number): RFMSegment {
   const avg = (r + f + m) / 3;
 
   if (r >= 4 && f >= 4 && m >= 4) return 'champions';
-  if (f >= 4 && m >= 3) return 'loyal';
+  if (r >= 3 && f >= 4 && m >= 3) return 'loyal';
   if (r >= 4 && f <= 2) return 'new';
   if (r >= 3 && f >= 2 && avg >= 3) return 'potential';
   if (r <= 2 && f >= 3) return 'at_risk';
