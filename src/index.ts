@@ -16,9 +16,11 @@ import { generateDailyReport, generateWeeklyReport } from './tools/reports.js';
 import { handleToolError, validateUUID } from './utils/errors.js';
 
 // ── Server ────────────────────────────────────────────────────────
+const SERVER_VERSION = '1.2.1';
+
 const server = new McpServer({
   name: 'shopops-mcp',
-  version: '1.0.0',
+  version: SERVER_VERSION,
 });
 
 // ── Tool: store_connect ───────────────────────────────────────────
@@ -26,47 +28,66 @@ server.registerTool(
   'store_connect',
   {
     title: 'Connect Store',
-    description: 'Connect a Shopify or WooCommerce store. Fetches initial product, order, and customer data. Use action "connect" to add a new store, "sync" to refresh data, or "list" to see connected stores.',
+    description: 'Manage Shopify or WooCommerce store connections. action="connect" adds a new store and performs an initial sync of products, orders, and customers; action="sync" refreshes cached data for an existing store; action="list" returns all connected stores with their sync counts. Returns a JSON payload with store metadata (id, name, platform, url, counts, last_sync) — credentials are never returned.',
     inputSchema: z.object({
-      action: z.enum(['connect', 'sync', 'list']).describe('Action to perform'),
-      name: z.string().optional().describe('Store display name (required for connect)'),
-      platform: PlatformSchema.optional().describe('E-commerce platform (required for connect)'),
-      url: z.string().optional().describe('Store URL (required for connect)'),
-      api_key: z.string().optional().describe('API access token (required for connect)'),
-      api_secret: z.string().optional().describe('API secret (required for WooCommerce connect)'),
-      store_id: z.string().optional().describe('Store ID (required for sync)'),
+      action: z.enum(['connect', 'sync', 'list']).describe('connect = add new store, sync = refresh existing store, list = show all stores'),
+      name: z.string().min(1).optional().describe('Human-readable store name (required for connect, e.g. "My Shop")'),
+      platform: PlatformSchema.optional().describe('"shopify" or "woocommerce" (required for connect)'),
+      url: z.string().url().optional().describe('Store base URL starting with https:// (required for connect, e.g. "https://myshop.myshopify.com")'),
+      api_key: z.string().min(1).optional().describe('Platform API access token (required for connect)'),
+      api_secret: z.string().min(1).optional().describe('Platform API secret — REQUIRED for woocommerce, ignored for shopify'),
+      store_id: z.string().uuid().optional().describe('Existing store UUID (required for sync)'),
     }),
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
   },
   async ({ action, name, platform, url, api_key, api_secret, store_id }) => {
     try {
       if (action === 'list') {
         const stores = await storage.getStores();
+        if (stores.length === 0) {
+          return {
+            content: [{ type: 'text' as const, text: 'No stores are connected yet. Use action="connect" with name, platform, url, and api_key to add one.' }],
+          };
+        }
         return {
-          content: [{ type: 'text' as const, text: JSON.stringify(stores.map((s) => ({
-            id: s.id, name: s.name, platform: s.platform, url: s.url,
-            products: s.product_count, orders: s.order_count, customers: s.customer_count,
-            last_sync: s.last_sync_at,
-          })), null, 2) }],
+          content: [{ type: 'text' as const, text: JSON.stringify({
+            total: stores.length,
+            stores: stores.map((s) => ({
+              id: s.id, name: s.name, platform: s.platform, url: s.url,
+              products: s.product_count, orders: s.order_count, customers: s.customer_count,
+              last_sync: s.last_sync_at,
+            })),
+          }, null, 2) }],
         };
       }
 
       if (action === 'sync') {
-        if (!store_id) return { content: [{ type: 'text' as const, text: 'store_id is required for sync' }], isError: true };
-        validateUUID(store_id, 'store');
+        if (!store_id) {
+          return { content: [{ type: 'text' as const, text: 'store_id is required for action="sync". Use action="list" to find connected store IDs.' }], isError: true };
+        }
         const result = await syncStore(store_id);
-        return { content: [{ type: 'text' as const, text: `Store synced: ${result.products} products, ${result.orders} orders, ${result.customers} customers` }] };
+        return { content: [{ type: 'text' as const, text: `Store synced successfully — ${result.products} products, ${result.orders} orders, ${result.customers} customers refreshed.` }] };
       }
 
       // connect
-      if (!name || !platform || !url || !api_key) {
-        return { content: [{ type: 'text' as const, text: 'name, platform, url, and api_key are required for connect' }], isError: true };
+      const missing: string[] = [];
+      if (!name) missing.push('name');
+      if (!platform) missing.push('platform');
+      if (!url) missing.push('url');
+      if (!api_key) missing.push('api_key');
+      if (missing.length > 0) {
+        return { content: [{ type: 'text' as const, text: `Missing required field(s) for connect: ${missing.join(', ')}. Required: name, platform, url, api_key. WooCommerce also needs api_secret.` }], isError: true };
       }
-      const result = await connectStore({ name, platform, url, api_key, api_secret });
+      if (platform === 'woocommerce' && !api_secret) {
+        return { content: [{ type: 'text' as const, text: 'api_secret is required when platform="woocommerce" (WooCommerce REST API uses consumer_key + consumer_secret).' }], isError: true };
+      }
+      const result = await connectStore({ name: name!, platform: platform!, url: url!, api_key: api_key!, api_secret });
       return {
         content: [{ type: 'text' as const, text: JSON.stringify({
-          message: `Store "${result.store.name}" connected successfully`,
+          message: `Store "${result.store.name}" connected successfully.`,
           store_id: result.store.id,
           synced: result.synced,
+          next_steps: 'Use inventory_status, customers_segment, or report_daily with this store_id to start analyzing.',
         }, null, 2) }],
       };
     } catch (e) { return handleToolError(e); }
@@ -78,7 +99,7 @@ server.registerTool(
   'inventory_status',
   {
     title: 'Inventory Status',
-    description: 'Get current inventory levels for a store. Shows out-of-stock and low-stock products sorted by urgency.',
+    description: 'Snapshot of current stock levels for a connected store. Returns a summary object with total product count, out-of-stock count, low-stock count (≤10 units), plus two arrays: out_of_stock and low_stock — each containing product id, title, sku, quantity, and status. Items are sorted by urgency (lowest quantity first). Read-only and idempotent.',
     inputSchema: z.object({
       store_id: z.string().uuid().describe('Store ID'),
     }),
@@ -117,7 +138,7 @@ server.registerTool(
   'pricing_analyze',
   {
     title: 'Pricing Analysis',
-    description: 'Analyze product pricing with margin calculation, sales velocity, and AI-powered price optimization suggestions.',
+    description: 'Analyze pricing across products with margin calculation, sales velocity, and rule-based price optimization suggestions. Returns an array where each element contains product_title, current_price, cost, margin_percent, daily_units_sold, revenue_per_day, suggested_price (or null if no change recommended), and suggestion_reason. Pass product_id to scope to a single product, omit for full catalog.',
     inputSchema: z.object({
       store_id: z.string().uuid().describe('Store ID'),
       product_id: z.string().optional().describe('Specific product ID (omit for all)'),
@@ -137,7 +158,7 @@ server.registerTool(
   'pricing_optimize',
   {
     title: 'Pricing Optimization',
-    description: 'Get AI pricing optimization recommendations for products. Filters to only products where a price change is suggested, sorted by potential revenue impact.',
+    description: 'Filtered pricing recommendations — only products where a price change is suggested. Returns a summary with total_suggestions count and an optimizations array (product, current_price, suggested_price, change_percent, reason, daily_revenue), sorted by absolute change_percent (biggest moves first). Use this instead of pricing_analyze when you only want actionable changes.',
     inputSchema: z.object({
       store_id: z.string().uuid().describe('Store ID'),
     }),
@@ -152,12 +173,13 @@ server.registerTool(
           product: p.product_title,
           current_price: p.current_price,
           suggested_price: p.suggested_price,
-          change_percent: p.suggested_price !== null
+          change_percent: p.suggested_price !== null && p.current_price > 0
             ? Math.round(((p.suggested_price - p.current_price) / p.current_price) * 10000) / 100
             : 0,
           reason: p.suggestion_reason,
           daily_revenue: p.revenue_per_day,
-        }));
+        }))
+        .sort((a, b) => Math.abs(b.change_percent) - Math.abs(a.change_percent));
       return { content: [{ type: 'text' as const, text: JSON.stringify({
         store_id,
         total_suggestions: optimizations.length,
@@ -191,7 +213,7 @@ server.registerTool(
   'customers_churn',
   {
     title: 'Churn Risk',
-    description: 'Identify customers at risk of churning. Returns at-risk, hibernating, and lost customers with win-back recommendations.',
+    description: 'Identify customers at risk of churning based on RFM recency + frequency signals. Returns an object with at_risk, hibernating, and lost arrays — each contains customer id, name, email, last_order_date, days_since_last_order, total_spent, total_orders, and a win_back_recommendation string. Use this for targeted re-engagement campaigns.',
     inputSchema: z.object({
       store_id: z.string().uuid().describe('Store ID'),
     }),
@@ -210,7 +232,7 @@ server.registerTool(
   'order_anomalies',
   {
     title: 'Order Anomaly Detection',
-    description: 'Detect suspicious orders using statistical anomaly detection. Flags high-value orders, velocity spikes, unusual quantities, off-hours purchases, and new-customer high-value orders.',
+    description: 'Statistical anomaly detection on recent orders. Flags high-value orders (>3σ from mean), velocity spikes (customer ordering unusually fast), unusual quantities, off-hours purchases (2am-5am), and new-customer high-value orders. Returns an array of anomalies with order_id, anomaly_type, severity (low/medium/high), reason, and recommended_action. Useful for fraud detection and revenue spike investigation.',
     inputSchema: z.object({
       store_id: z.string().uuid().describe('Store ID'),
     }),
@@ -252,7 +274,7 @@ server.registerTool(
     description: 'Daily operational report: orders, revenue, top products, new vs returning customers, low stock alerts, and anomaly count.',
     inputSchema: z.object({
       store_id: z.string().uuid().describe('Store ID'),
-      date: z.string().optional().describe('Date (YYYY-MM-DD, defaults to today)'),
+      date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD format').optional().describe('Date in YYYY-MM-DD format (defaults to today)'),
     }),
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   },
@@ -438,7 +460,7 @@ async function main() {
     const httpServer = createServer(async (req, res) => {
       if (req.method === 'GET' && req.url === '/health') {
         res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ status: 'ok', server: 'shopops-mcp', version: '1.0.0' }));
+        res.end(JSON.stringify({ status: 'ok', server: 'shopops-mcp', version: SERVER_VERSION }));
         return;
       }
 
