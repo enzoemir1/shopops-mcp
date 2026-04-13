@@ -2,6 +2,10 @@
 
 **AI-powered server that implements the Model Context Protocol (MCP) for managing Shopify and WooCommerce stores.**
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6.svg)](https://www.typescriptlang.org/)
+[![MCP](https://img.shields.io/badge/MCP-1.29-2A9D8F.svg)](https://modelcontextprotocol.io/)
+
 ---
 
 ## Features
