@@ -102,7 +102,7 @@ Optional variables:
 
 ## License
 
-ShopOps MCP is released under the **MIT License**. See `LICENSE` for full terms.
+ShopOps MCP is released under the **MIT License**. See [LICENSE](LICENSE) for full terms.
 
 ---
 
