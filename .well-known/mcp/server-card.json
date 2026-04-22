@@ -1,27 +1,28 @@
 {
   "name": "shopops-mcp",
   "displayName": "ShopOps MCP",
-  "description": "AI e-commerce operations for Shopify and WooCommerce. Inventory forecasting, margin-based pricing, RFM customer segmentation, order anomaly detection, and automated reports. 13 tools, 4 resources.",
-  "version": "1.1.0",
+  "description": "AI e-commerce operations manager for Shopify and WooCommerce. Moving-average demand forecasting with safety stock, margin-based pricing optimization, RFM 7-segment customer analysis, fraud/anomaly detection, ABC product performance, automated daily/weekly reports. 12 tools, 4 resources, 3 prompts.",
+  "version": "1.2.2",
+  "license": "MIT",
+  "repository": "https://github.com/enzoemir1/shopops-mcp",
   "tools": [
-    { "name": "store_connect", "description": "Connect Shopify or WooCommerce store" },
-    { "name": "inventory_status", "description": "Current stock levels and low-stock alerts" },
-    { "name": "inventory_forecast", "description": "Demand prediction and reorder points" },
-    { "name": "pricing_analyze", "description": "Margin calculation and sales velocity" },
-    { "name": "pricing_optimize", "description": "Price suggestions based on margin analysis" },
-    { "name": "customers_segment", "description": "RFM segmentation into 7 segments" },
-    { "name": "customers_churn", "description": "Churn risk scoring and retention recs" },
-    { "name": "order_anomalies", "description": "Fraud and anomaly detection (5 methods)" },
-    { "name": "product_performance", "description": "ABC/Pareto product analysis" },
-    { "name": "report_daily", "description": "Daily operations summary" },
-    { "name": "report_weekly", "description": "Weekly trend report" },
-    { "name": "store_connect:sync", "description": "Refresh data from store" },
-    { "name": "store_connect:list", "description": "List connected stores" }
+    { "name": "store_connect", "description": "Connect Shopify (Admin API token) or WooCommerce (consumer key + secret)" },
+    { "name": "inventory_status", "description": "Current stock levels, low-stock alerts, back-order flags" },
+    { "name": "inventory_forecast", "description": "Moving-average demand projection with safety-stock buffer" },
+    { "name": "pricing_analyze", "description": "Price elasticity report, under/over-priced SKU detection" },
+    { "name": "pricing_optimize", "description": "Price suggestions based on margin, sales velocity, configurable rules" },
+    { "name": "customers_segment", "description": "RFM analysis assigning 7 segments (Champions, Loyal, At Risk, etc.)" },
+    { "name": "customers_churn", "description": "Churn risk scoring with retention recommendations" },
+    { "name": "order_anomalies", "description": "Pattern-based fraud/anomaly detection" },
+    { "name": "product_performance", "description": "ABC/Pareto analysis with contribution metrics per class" },
+    { "name": "report_daily", "description": "JSON/CSV daily operations summary" },
+    { "name": "report_weekly", "description": "Weekly performance report with trend visualisation data" },
+    { "name": "store_sync", "description": "Refresh inventory, orders, customers from connected store" }
   ],
   "resources": [
-    { "uri": "store://overview", "description": "Store metrics overview" },
-    { "uri": "store://inventory", "description": "Inventory catalogue" },
-    { "uri": "store://orders/recent", "description": "Recent 100 orders" },
-    { "uri": "store://customers/top", "description": "Top 50 customers by LTV" }
+    { "uri": "store://overview", "description": "Sales, orders, customers, gross margin high-level metrics" },
+    { "uri": "store://inventory", "description": "Full catalogue with quantity-on-hand, reserved, forecasted shortages" },
+    { "uri": "store://orders/recent", "description": "100 most recent orders with status, total, payment method" },
+    { "uri": "store://customers/top", "description": "Top 50 customers by LTV, frequency, recency" }
   ]
 }

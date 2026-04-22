@@ -1,0 +1,44 @@
+# Smithery manifest — ShopOps MCP
+# Users provide their own Shopify Admin API token or WooCommerce REST
+# consumer key/secret. Without credentials, demo data is served for
+# evaluation.
+
+runtime: "container"
+
+build:
+  dockerfile: "Dockerfile"
+  dockerBuildPath: "./"
+
+startCommand:
+  type: "http"
+
+configSchema:
+  type: object
+  additionalProperties: false
+  properties:
+    shopifyApiKey:
+      type: string
+      title: Shopify API Key
+      description: "Private app API key (Shopify Admin). Required for real Shopify integration."
+    shopifyApiPassword:
+      type: string
+      title: Shopify API Password
+      description: "Shopify private app password (Admin API access token)."
+    shopifyStoreDomain:
+      type: string
+      title: Shopify Store Domain
+      description: "e.g. myshop.myshopify.com"
+    woocommerceConsumerKey:
+      type: string
+      title: WooCommerce Consumer Key
+      description: "REST API consumer key from WooCommerce → Settings → Advanced → REST API."
+    woocommerceConsumerSecret:
+      type: string
+      title: WooCommerce Consumer Secret
+      description: "Paired consumer secret for the REST API key."
+    woocommerceStoreUrl:
+      type: string
+      title: WooCommerce Store URL
+      description: "e.g. https://example.com (without trailing slash)."
+
+exampleConfig: {}
