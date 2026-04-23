@@ -1,0 +1,56 @@
+{
+  "$schema": "https://glama.ai/mcp/schemas/server.json",
+  "maintainers": ["enzoemir1"],
+  "name": "shopops-mcp",
+  "description": "AI e-commerce operations for Shopify + WooCommerce. Moving-average demand forecasting, margin-based pricing, RFM 7-segment customer analysis, fraud/anomaly detection, ABC product performance, automated daily/weekly reports. 12 tools, 4 resources, 3 prompts.",
+  "tools": {
+    "store_connect": {
+      "enabled": true,
+      "description": "Connect a Shopify (Admin API token + store domain) or WooCommerce (consumer key/secret + base URL) store. Validates credentials with a ping request. Returns the connection id used by all other tools."
+    },
+    "store_sync": {
+      "enabled": true,
+      "description": "Refresh inventory, orders, customers, and products from the connected store. Respects platform rate limits (Shopify 2req/s, WooCommerce unlimited). Returns per-entity counts and last_synced_at."
+    },
+    "inventory_status": {
+      "enabled": true,
+      "description": "Current stock levels per SKU with low-stock alerts (< reorder point), back-order flags, and days-until-stockout based on current sell-through rate."
+    },
+    "inventory_forecast": {
+      "enabled": true,
+      "description": "Moving-average demand projection (configurable window 7/14/30 days) with safety-stock buffer. Returns projected demand, reorder point, and suggested PO quantity per SKU."
+    },
+    "pricing_analyze": {
+      "enabled": true,
+      "description": "Price elasticity report per SKU: current margin, sales velocity, competitor benchmark if URL provided, and under/over-priced flag based on demand curve."
+    },
+    "pricing_optimize": {
+      "enabled": true,
+      "description": "Suggest optimal price per SKU combining margin analysis, sales velocity, and configurable rules (minimum margin %, ceiling, rounding). Returns current price, suggested price, expected demand change."
+    },
+    "customers_segment": {
+      "enabled": true,
+      "description": "RFM analysis (Recency, Frequency, Monetary) assigning customers to 7 segments: Champions, Loyal, Potential Loyalist, At Risk, Can't Lose Them, Hibernating, New Customers. Returns segment counts and per-segment LTV averages."
+    },
+    "customers_churn": {
+      "enabled": true,
+      "description": "Churn risk score (0-100) per customer based on days since last order, frequency decay, and RFM drift. Returns top-N at-risk customers with retention action recommendations."
+    },
+    "order_anomalies": {
+      "enabled": true,
+      "description": "Pattern-based fraud and anomaly detection: unusually large orders, repeat billing address with varied shipping, rapid-fire orders, high-risk country flags. Severity-ranked list with explanation per flag."
+    },
+    "product_performance": {
+      "enabled": true,
+      "description": "ABC/Pareto analysis classifying products as A (top 80% of revenue), B (next 15%), C (long tail). Per-class metrics and recommendations (promote A, reassess C)."
+    },
+    "report_daily": {
+      "enabled": true,
+      "description": "Daily operations summary: revenue, orders, low-stock alerts, top customers, top products, flagged orders. JSON or CSV output."
+    },
+    "report_weekly": {
+      "enabled": true,
+      "description": "Weekly trend report with period-over-period deltas, top gainers/decliners, inventory risk outlook, and customer-segment movement."
+    }
+  }
+}
