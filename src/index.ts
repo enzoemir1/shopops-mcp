@@ -17,7 +17,7 @@ import { seedDemoStore } from './services/demo-seed.js';
 import { handleToolError, validateUUID } from './utils/errors.js';
 
 // ── Server ────────────────────────────────────────────────────────
-const SERVER_VERSION = '1.2.2';
+const SERVER_VERSION = '1.2.3';
 
 const server = new McpServer({
   name: 'shopops-mcp',
@@ -121,7 +121,7 @@ server.registerTool(
     title: 'Inventory Status',
     description: 'Snapshot of current stock levels for a connected store. Returns a summary object with total product count, out-of-stock count, low-stock count (≤10 units), plus two arrays: out_of_stock and low_stock — each containing product id, title, sku, quantity, and status. Items are sorted by urgency (lowest quantity first). Read-only and idempotent.',
     inputSchema: z.object({
-      store_id: z.string().uuid().describe('Store ID'),
+      store_id: z.string().uuid().describe('UUID of a connected store (returned by store_connect with action="connect" or visible in store_connect with action="list" / the store_overview resource)'),
     }),
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   },
@@ -140,8 +140,8 @@ server.registerTool(
     title: 'Inventory Forecast',
     description: 'Predict stock depletion dates using moving-average sales velocity. Returns reorder points, safety stock levels, and suggested reorder quantities for each product.',
     inputSchema: z.object({
-      store_id: z.string().uuid().describe('Store ID'),
-      product_id: z.string().optional().describe('Specific product ID (omit for all products)'),
+      store_id: z.string().uuid().describe('UUID of a connected store (returned by store_connect with action="connect" or visible in store_connect with action="list" / the store_overview resource)'),
+      product_id: z.string().optional().describe('Restrict the forecast to a single product by its external_id (Shopify product ID or WooCommerce product slug). Omit to forecast every active product in the store.'),
     }),
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   },
@@ -160,8 +160,8 @@ server.registerTool(
     title: 'Pricing Analysis',
     description: 'Analyze pricing across products with margin calculation, sales velocity, and rule-based price optimization suggestions. Returns an array where each element contains product_title, current_price, cost, margin_percent, daily_units_sold, revenue_per_day, suggested_price (or null if no change recommended), and suggestion_reason. Pass product_id to scope to a single product, omit for full catalog.',
     inputSchema: z.object({
-      store_id: z.string().uuid().describe('Store ID'),
-      product_id: z.string().optional().describe('Specific product ID (omit for all)'),
+      store_id: z.string().uuid().describe('UUID of a connected store (returned by store_connect with action="connect" or visible in store_connect with action="list" / the store_overview resource)'),
+      product_id: z.string().optional().describe('Restrict the analysis to a single product by external_id. Omit to analyse the entire active catalog.'),
     }),
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   },
@@ -180,7 +180,7 @@ server.registerTool(
     title: 'Pricing Optimization',
     description: 'Filtered pricing recommendations — only products where a price change is suggested. Returns a summary with total_suggestions count and an optimizations array (product, current_price, suggested_price, change_percent, reason, daily_revenue), sorted by absolute change_percent (biggest moves first). Use this instead of pricing_analyze when you only want actionable changes.',
     inputSchema: z.object({
-      store_id: z.string().uuid().describe('Store ID'),
+      store_id: z.string().uuid().describe('UUID of a connected store (returned by store_connect with action="connect" or visible in store_connect with action="list" / the store_overview resource)'),
     }),
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   },
@@ -216,7 +216,7 @@ server.registerTool(
     title: 'Customer Segmentation',
     description: 'RFM (Recency, Frequency, Monetary) customer segmentation. Categorizes customers into segments: Champions, Loyal, Potential, At Risk, New, Hibernating, Lost — with actionable recommendations.',
     inputSchema: z.object({
-      store_id: z.string().uuid().describe('Store ID'),
+      store_id: z.string().uuid().describe('UUID of a connected store (returned by store_connect with action="connect" or visible in store_connect with action="list" / the store_overview resource)'),
     }),
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   },
@@ -235,7 +235,7 @@ server.registerTool(
     title: 'Churn Risk',
     description: 'Identify customers at risk of churning based on RFM recency + frequency signals. Returns an object with at_risk, hibernating, and lost arrays — each contains customer id, name, email, last_order_date, days_since_last_order, total_spent, total_orders, and a win_back_recommendation string. Use this for targeted re-engagement campaigns.',
     inputSchema: z.object({
-      store_id: z.string().uuid().describe('Store ID'),
+      store_id: z.string().uuid().describe('UUID of a connected store (returned by store_connect with action="connect" or visible in store_connect with action="list" / the store_overview resource)'),
     }),
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   },
@@ -254,7 +254,7 @@ server.registerTool(
     title: 'Order Anomaly Detection',
     description: 'Statistical anomaly detection on recent orders. Flags high-value orders (>3σ from mean), velocity spikes (customer ordering unusually fast), unusual quantities, off-hours purchases (2am-5am), and new-customer high-value orders. Returns an array of anomalies with order_id, anomaly_type, severity (low/medium/high), reason, and recommended_action. Useful for fraud detection and revenue spike investigation.',
     inputSchema: z.object({
-      store_id: z.string().uuid().describe('Store ID'),
+      store_id: z.string().uuid().describe('UUID of a connected store (returned by store_connect with action="connect" or visible in store_connect with action="list" / the store_overview resource)'),
     }),
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   },
@@ -273,8 +273,8 @@ server.registerTool(
     title: 'Product Performance (ABC Analysis)',
     description: 'Product performance report with ABC analysis. Category A = top 80% revenue, B = next 15%, C = bottom 5%. Includes trends, margins, and daily sales velocity.',
     inputSchema: z.object({
-      store_id: z.string().uuid().describe('Store ID'),
-      period_days: z.number().int().min(7).max(90).default(30).describe('Analysis period in days (default 30)'),
+      store_id: z.string().uuid().describe('UUID of a connected store (returned by store_connect with action="connect" or visible in store_connect with action="list" / the store_overview resource)'),
+      period_days: z.number().int().min(7).max(90).default(30).describe('Look-back window for ABC classification, 7–90 days. Defaults to 30. Shorter windows favour recent trends; longer windows smooth seasonality.'),
     }),
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   },
@@ -293,8 +293,8 @@ server.registerTool(
     title: 'Daily Report',
     description: 'Daily operational report: orders, revenue, top products, new vs returning customers, low stock alerts, and anomaly count.',
     inputSchema: z.object({
-      store_id: z.string().uuid().describe('Store ID'),
-      date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD format').optional().describe('Date in YYYY-MM-DD format (defaults to today)'),
+      store_id: z.string().uuid().describe('UUID of a connected store (returned by store_connect with action="connect" or visible in store_connect with action="list" / the store_overview resource)'),
+      date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD format').optional().describe('Calendar date for the report in YYYY-MM-DD (e.g. "2026-04-25"). Defaults to today (UTC). The report is computed against orders whose created_at falls within that calendar day.'),
     }),
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   },
@@ -313,7 +313,7 @@ server.registerTool(
     title: 'Weekly Report',
     description: 'Weekly trend report: revenue/order changes vs previous week, customer segment distribution, trending products, and AI-generated insights.',
     inputSchema: z.object({
-      store_id: z.string().uuid().describe('Store ID'),
+      store_id: z.string().uuid().describe('UUID of a connected store (returned by store_connect with action="connect" or visible in store_connect with action="list" / the store_overview resource)'),
     }),
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   },
