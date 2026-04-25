@@ -20,7 +20,7 @@ import { homedir } from 'node:os';
 import { join as pathJoin } from 'node:path';
 
 // ── Server ────────────────────────────────────────────────────────
-const SERVER_VERSION = '1.2.3';
+const SERVER_VERSION = '1.2.4';
 
 const LICENSE_CONFIG: LicenseConfig = {
   productId: 1004796,
