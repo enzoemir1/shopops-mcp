@@ -14,10 +14,20 @@ import { getOrderAnomalies } from './tools/orders.js';
 import { getProductPerformance } from './tools/products.js';
 import { generateDailyReport, generateWeeklyReport } from './tools/reports.js';
 import { seedDemoStore } from './services/demo-seed.js';
+import { ensureProOrReject, type LicenseConfig } from './services/license.js';
 import { handleToolError, validateUUID } from './utils/errors.js';
+import { homedir } from 'node:os';
+import { join as pathJoin } from 'node:path';
 
 // ── Server ────────────────────────────────────────────────────────
 const SERVER_VERSION = '1.2.3';
+
+const LICENSE_CONFIG: LicenseConfig = {
+  productId: 1004796,
+  bundleProductId: 1004800,
+  cacheDir: pathJoin(homedir(), '.config', 'shopops-mcp'),
+  buyUrl: 'https://automatiabcn.lemonsqueezy.com/buy/cbbe44f0-a146-4c65-88c8-71f371037758',
+};
 
 const server = new McpServer({
   name: 'shopops-mcp',
@@ -147,6 +157,8 @@ server.registerTool(
   },
   async ({ store_id, product_id }) => {
     try {
+      const reject = await ensureProOrReject(LICENSE_CONFIG, 'inventory_forecast');
+      if (reject) return reject;
       const result = await getInventoryForecast(store_id, product_id);
       return { content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }] };
     } catch (e) { return handleToolError(e); }
@@ -186,6 +198,8 @@ server.registerTool(
   },
   async ({ store_id }) => {
     try {
+      const reject = await ensureProOrReject(LICENSE_CONFIG, 'pricing_optimize');
+      if (reject) return reject;
       const result = await analyzePricing(store_id);
       const optimizations = result
         .filter((p) => p.suggested_price !== null)
@@ -241,6 +255,8 @@ server.registerTool(
   },
   async ({ store_id }) => {
     try {
+      const reject = await ensureProOrReject(LICENSE_CONFIG, 'customers_churn');
+      if (reject) return reject;
       const result = await getChurnRisk(store_id);
       return { content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }] };
     } catch (e) { return handleToolError(e); }
@@ -260,6 +276,8 @@ server.registerTool(
   },
   async ({ store_id }) => {
     try {
+      const reject = await ensureProOrReject(LICENSE_CONFIG, 'order_anomalies');
+      if (reject) return reject;
       const result = await getOrderAnomalies(store_id);
       return { content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }] };
     } catch (e) { return handleToolError(e); }
@@ -319,6 +337,8 @@ server.registerTool(
   },
   async ({ store_id }) => {
     try {
+      const reject = await ensureProOrReject(LICENSE_CONFIG, 'report_weekly');
+      if (reject) return reject;
       const result = await generateWeeklyReport(store_id);
       return { content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }] };
     } catch (e) { return handleToolError(e); }

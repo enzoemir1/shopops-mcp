@@ -100,6 +100,42 @@ Optional variables:
 
 ---
 
+## Pro License
+
+ShopOps ships in **Free mode** — `store_demo_seed`, `store_connect`, `inventory_status`, `pricing_analyze`, `customers_segment`, `product_performance`, and `report_daily` are open. The following tools require a **Pro license**:
+
+- `inventory_forecast` — moving-average demand forecasting + reorder points
+- `pricing_optimize` — actionable price-change recommendations
+- `customers_churn` — churn risk scoring + retention recommendations
+- `order_anomalies` — fraud / anomaly detection
+- `report_weekly` — week-over-week trend report + AI insights
+
+**Buy a Pro License (€29, lifetime, 3 machines):** https://automatiabcn.lemonsqueezy.com/buy/cbbe44f0-a146-4c65-88c8-71f371037758
+
+Or get the **[Indie MCP Stack Bundle](https://automatiabcn.lemonsqueezy.com/buy/55e932fd-8319-47f0-8e95-0b86a29f2617)** (€69, all 4 servers).
+
+```bash
+export LEMONSQUEEZY_LICENSE_KEY=YOUR-KEY-HERE
+```
+
+Or in your MCP client config:
+
+```json
+{
+  "mcpServers": {
+    "shopops-mcp": {
+      "command": "npx",
+      "args": ["-y", "shopops-mcp-server"],
+      "env": { "LEMONSQUEEZY_LICENSE_KEY": "YOUR-KEY-HERE" }
+    }
+  }
+}
+```
+
+Validation is cached locally for 24 h — fully offline-capable after first run.
+
+---
+
 ## License
 
 ShopOps MCP is released under the **MIT License**. See [LICENSE](LICENSE) for full terms.
